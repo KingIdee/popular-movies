@@ -1,16 +1,11 @@
-package android.idee.com.popularmovies.ui.fragment;
+package com.idee.android.popularmovies.ui.fragment;
 
 import android.content.Intent;
-import android.idee.com.popularmovies.R;
-import android.idee.com.popularmovies.data.model.MovieModel;
-import android.idee.com.popularmovies.ui.activity.MovieDetail;
-import android.idee.com.popularmovies.ui.activity.SettingsActivity;
-import android.idee.com.popularmovies.ui.adapter.MovieListAdapter;
-import android.idee.com.popularmovies.utils.NetworkUtils;
-import android.idee.com.popularmovies.utils.PreferenceUtils;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
+
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -22,12 +17,22 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.idee.popularmovies.R;
+import com.idee.android.popularmovies.model.MovieModel;
+import com.idee.android.popularmovies.ui.activity.MovieDetail;
+import com.idee.android.popularmovies.ui.activity.NewSettingsActivity;
+import com.idee.android.popularmovies.ui.adapter.MovieListAdapter;
+import com.idee.android.popularmovies.utils.NetworkUtils;
+import com.idee.android.popularmovies.utils.PreferenceUtils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,7 +41,7 @@ import retrofit2.Response;
  * A placeholder fragment containing a simple view.
  */
 
-public class MovieListActivityFragment extends Fragment implements MovieListAdapter.ItemClickListener {
+public class MovieListActivityFragment extends Fragment implements MovieListAdapter.ItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener  {
 
     private static final String LOG_TAG = MovieListActivityFragment.class.getSimpleName();
     private static final String CURRENT_SORT_ORDER = "current_sort_order";
@@ -44,19 +49,24 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
     public static final String EXTRA_PARCEABLE = "extra_parceable";
     private ArrayList<MovieModel> movieArrayList = new ArrayList<>();
     MovieListAdapter movieListAdapter;
-    ProgressBar progressBar;
-    TextView errorMessage;
-    private String currentSortOrder;
-    RecyclerView mMovieList;
-    Bundle mSavedBundle;
+    SharedPreferences sharedPreferences;
 
     public MovieListActivityFragment() {}
 
+    @BindView(R.id.pb_loading_movie_list)
+    ProgressBar progressBar;
+
+    @BindView(R.id.tv_error_message)
+    TextView errorMessage;
+
+    @BindView(R.id.rv_movie_list)
+    RecyclerView mMovieList;
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putString(CURRENT_SORT_ORDER, currentSortOrder);
-        outState.putParcelableArrayList(MY_LIST, movieArrayList);
         super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(MY_LIST, movieArrayList);
+        Log.d(LOG_TAG,"On Save Instance");
     }
 
     @Override
@@ -65,24 +75,23 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
 
         View mView = inflater.inflate(R.layout.fragment_movie_list, container, false);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 2);
-
-        mSavedBundle=savedInstanceState;
+        ButterKnife.bind(this,mView);
         setHasOptionsMenu(true);
 
-        progressBar = (ProgressBar) mView.findViewById(R.id.pb_loading_movie_list);
-        errorMessage = (TextView) mView.findViewById(R.id.tv_error_message);
         errorMessage.setText(R.string.error_message);
         mMovieList = (RecyclerView) mView.findViewById(R.id.rv_movie_list);
         mMovieList.setLayoutManager(gridLayoutManager);
         movieListAdapter = new MovieListAdapter(getActivity(), this);
 
-        if (savedInstanceState!=null){
-            movieArrayList =  savedInstanceState.getParcelableArrayList(MY_LIST);
+        if (savedInstanceState!=null)
+            movieArrayList = savedInstanceState.getParcelableArrayList(MY_LIST);
+        else
+            fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
 
-        }
-
-        movieListAdapter.setMovieList(movieArrayList);
         mMovieList.setAdapter(movieListAdapter);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
         return mView;
     }
@@ -90,18 +99,19 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
     public void showErrorMessage() {
         progressBar.setVisibility(View.INVISIBLE);
         errorMessage.setVisibility(View.VISIBLE);
+        mMovieList.setVisibility(View.INVISIBLE);
     }
 
     public void showResponse() {
         progressBar.setVisibility(View.INVISIBLE);
         errorMessage.setVisibility(View.INVISIBLE);
+        mMovieList.setVisibility(View.VISIBLE);
     }
 
     public void fetchMovieList(String sortOrder) {
 
         progressBar.setVisibility(View.VISIBLE);
         movieArrayList.clear();
-        currentSortOrder = sortOrder;
 
         if (NetworkUtils.isOnline(getActivity())) {
 
@@ -126,6 +136,7 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
 
         } else {
 
+            progressBar.setVisibility(View.INVISIBLE);
             Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
 
         }
@@ -154,8 +165,9 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
                 mMovieModel.setOverview(object.getString("overview"));
 
                 movieArrayList.add(mMovieModel);
-                movieListAdapter.notifyDataSetChanged();
             }
+
+            movieListAdapter.setMovieList(movieArrayList);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -171,23 +183,22 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
 
     }
 
-    @Override
+  /*  @Override
     public void onStart() {
         super.onStart();
-        if (mSavedBundle!=null){
-            if (PreferenceUtils.currentSortOrder(getActivity()).equals(mSavedBundle.getString(CURRENT_SORT_ORDER))){
+        if(mSavedBundle!=null) {
+            if (PreferenceUtils.currentSortOrder(getActivity()).equals(currentSortOrder)) {
                 movieArrayList = mSavedBundle.getParcelableArrayList(MY_LIST);
                 movieListAdapter.setMovieList(movieArrayList);
                 showResponse();
             } else {
                 fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
             }
-
         } else {
-            fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
+
         }
 
-    }
+    }*/
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -198,11 +209,25 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            startActivity(new Intent(getActivity(), SettingsActivity.class));
+            startActivity(new Intent(getActivity(), NewSettingsActivity.class));
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+        if (key.equals(getString(R.string.pref_list_key))) {
+            fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
+        }
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+    }
 }

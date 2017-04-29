@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="android.idee.com.popularmovies">
+    package="com.android.idee.popularmovies">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ui.activity.MovieListActivity"
+            android:name="com.idee.android.popularmovies.ui.activity.MovieListActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -23,22 +23,23 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.activity.SettingsActivity"
+            android:name="com.idee.android.popularmovies.ui.activity.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.activity.MovieListActivity">
+            android:parentActivityName="com.idee.android.popularmovies.ui.activity.MovieListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="android.idee.com.popularmovies.ui.activity.MovieListActivity" />
+                android:value="com.idee.android.popularmovies.ui.activity.MovieListActivity" />
         </activity>
         <activity
-            android:name=".ui.activity.MovieDetail"
+            android:name="com.idee.android.popularmovies.ui.activity.MovieDetail"
             android:label="@string/title_activity_movie_detail"
-            android:parentActivityName=".ui.activity.MovieListActivity"
+            android:parentActivityName="com.idee.android.popularmovies.ui.activity.MovieListActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="android.idee.com.popularmovies.ui.activity.MovieListActivity" />
+                android:value="com.idee.android.popularmovies.ui.activity.MovieListActivity" />
         </activity>
+        <activity android:name="com.idee.android.popularmovies.ui.activity.NewSettingsActivity"></activity>
     </application>
 
 </manifest>

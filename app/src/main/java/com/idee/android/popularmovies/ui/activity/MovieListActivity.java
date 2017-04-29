@@ -1,16 +1,17 @@
-package android.idee.com.popularmovies.ui.activity;
+package com.idee.android.popularmovies.ui.activity;
 
-import android.idee.com.popularmovies.R;
-import android.idee.com.popularmovies.ui.fragment.MovieListActivityFragment;
+
 import android.os.Bundle;
 import android.os.PersistableBundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
-import android.view.MenuItem;
+import android.widget.ImageView;
+
+import com.android.idee.popularmovies.R;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MovieListActivity extends AppCompatActivity {
 

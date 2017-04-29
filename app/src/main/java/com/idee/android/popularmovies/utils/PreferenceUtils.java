@@ -1,9 +1,11 @@
-package android.idee.com.popularmovies.utils;
+package com.idee.android.popularmovies.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.idee.com.popularmovies.R;
+
 import android.preference.PreferenceManager;
+
+import com.android.idee.popularmovies.R;
 
 /**
  * Created by idee on 4/12/17.

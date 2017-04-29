@@ -1,8 +1,6 @@
-package android.idee.com.popularmovies.ui.adapter;
+package com.idee.android.popularmovies.ui.adapter;
 
 import android.content.Context;
-import android.idee.com.popularmovies.R;
-import android.idee.com.popularmovies.data.model.MovieModel;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,9 +8,14 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.idee.popularmovies.R;
+import com.idee.android.popularmovies.model.MovieModel;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by idee on 4/12/17.
@@ -54,14 +57,16 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+        @BindView(R.id.iv_movie_poster_image)
         ImageView posterImage;
+
+        @BindView(R.id.tv_movie_title)
         TextView movieTitle;
 
         public ViewHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
-            posterImage = (ImageView) itemView.findViewById(R.id.iv_movie_poster_image);
-            movieTitle = (TextView) itemView.findViewById(R.id.tv_movie_title);
+            ButterKnife.bind(this,itemView);
         }
 
         @Override

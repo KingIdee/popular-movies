@@ -1,18 +1,14 @@
-package android.idee.com.popularmovies.ui.activity;
+package com.idee.android.popularmovies.ui.activity;
 
-import android.idee.com.popularmovies.data.model.MovieModel;
-import android.idee.com.popularmovies.ui.fragment.MovieListActivityFragment;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.idee.com.popularmovies.R;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.idee.popularmovies.R;
+import com.idee.android.popularmovies.model.MovieModel;
+import com.idee.android.popularmovies.ui.fragment.MovieListActivityFragment;
 import com.squareup.picasso.Picasso;
 
 public class MovieDetail extends AppCompatActivity {

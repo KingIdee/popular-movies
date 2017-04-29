@@ -1,7 +1,8 @@
-package android.idee.com.popularmovies.utils;
+package com.idee.android.popularmovies.utils;
 
 import android.content.Context;
-import android.idee.com.popularmovies.BuildConfig;
+
+import com.android.idee.popularmovies.BuildConfig;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -23,20 +24,6 @@ public class NetworkUtils {
     private final static String MOVIE_BASE_URL = "http://api.themoviedb.org/";
     private final static String PARAM_API_KEY = "api_key";
 
-    public static String builtUrl() {
-
-        // TODO check the sort order from the PrefUtils
-
-        Uri mUri = Uri.parse(MOVIE_BASE_URL)
-                .buildUpon()
-               // .appendPath(sortOrder)
-                .appendQueryParameter(PARAM_API_KEY, BuildConfig.MOVIEDB_API_KEY)
-                .build();
-
-        return mUri.toString();
-    }
-
-
     public static boolean isOnline(Context mContext) {
         ConnectivityManager cm =
                 (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -45,7 +32,7 @@ public class NetworkUtils {
     }
 
     public interface MovieApiClient {
-        @GET("/3/movie/{sort_order}?api_key="+BuildConfig.MOVIEDB_API_KEY)
+        @GET("/3/movie/{sort_order}?api_key="+ BuildConfig.MOVIEDB_API_KEY)
         Call<String> movieModelList(
                 @Path("sort_order") String sortOrder
         );
