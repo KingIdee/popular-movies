@@ -3,8 +3,12 @@ package com.idee.android.popularmovies.ui.fragment;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,8 +22,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.idee.popularmovies.R;
-import com.idee.android.popularmovies.model.MovieModel;
+import com.idee.android.popularmovies.data.model.MovieModel;
+import com.idee.android.popularmovies.data.provider.MovieContract;
 import com.idee.android.popularmovies.ui.activity.MovieDetail;
+import com.idee.android.popularmovies.ui.activity.MovieDetailFragment;
 import com.idee.android.popularmovies.ui.activity.NewSettingsActivity;
 import com.idee.android.popularmovies.ui.adapter.MovieListAdapter;
 import com.idee.android.popularmovies.utils.NetworkUtils;
@@ -37,19 +43,25 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.idee.android.popularmovies.ui.activity.MovieListActivity.BUNDLE_EXTRA;
+import static com.idee.android.popularmovies.ui.activity.MovieListActivity.EXTRA_PARCELABLE;
+import static com.idee.android.popularmovies.ui.activity.MovieListActivity.twoPane;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 
-public class MovieListActivityFragment extends Fragment implements MovieListAdapter.ItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener  {
+public class MovieListActivityFragment extends Fragment
+        implements MovieListAdapter.ItemClickListener,
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        LoaderManager.LoaderCallbacks<Cursor>{
 
     private static final String LOG_TAG = MovieListActivityFragment.class.getSimpleName();
-    private static final String CURRENT_SORT_ORDER = "current_sort_order";
     private static final String MY_LIST = "rv_array_list";
-    public static final String EXTRA_PARCEABLE = "extra_parceable";
     private ArrayList<MovieModel> movieArrayList = new ArrayList<>();
     MovieListAdapter movieListAdapter;
     SharedPreferences sharedPreferences;
+    public static final int TASK_LOADER_ID = 1997;
 
     public MovieListActivityFragment() {}
 
@@ -64,30 +76,43 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(MY_LIST, movieArrayList);
         Log.d(LOG_TAG,"On Save Instance");
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        setRetainInstance(true);
         View mView = inflater.inflate(R.layout.fragment_movie_list, container, false);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 2);
         ButterKnife.bind(this,mView);
         setHasOptionsMenu(true);
 
+        progressBar.setVisibility(View.INVISIBLE);
         errorMessage.setText(R.string.error_message);
         mMovieList = (RecyclerView) mView.findViewById(R.id.rv_movie_list);
         mMovieList.setLayoutManager(gridLayoutManager);
         movieListAdapter = new MovieListAdapter(getActivity(), this);
 
-        if (savedInstanceState!=null)
-            movieArrayList = savedInstanceState.getParcelableArrayList(MY_LIST);
-        else
-            fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
+        final String sortOrder = PreferenceUtils.currentSortOrder(getActivity());
 
+        if (savedInstanceState!=null) {
+            movieArrayList = savedInstanceState.getParcelableArrayList(MY_LIST);
+            movieListAdapter.setMovieList(movieArrayList);
+            Toast.makeText(getActivity(), "Using the save instance state", Toast.LENGTH_SHORT).show();
+            showResponse();
+        } else {
+
+            if (sortOrder.equals("favourites")) {
+                getActivity().getSupportLoaderManager().restartLoader(TASK_LOADER_ID, null, this);
+            } else {
+                fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
+            }
+
+        }
         mMovieList.setAdapter(movieListAdapter);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -108,10 +133,13 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
         mMovieList.setVisibility(View.VISIBLE);
     }
 
-    public void fetchMovieList(String sortOrder) {
+    private void fetchMovieList(String sortOrder) {
 
         progressBar.setVisibility(View.VISIBLE);
         movieArrayList.clear();
+
+        if (movieListAdapter!=null)
+            movieListAdapter.notifyDataSetChanged();
 
         if (NetworkUtils.isOnline(getActivity())) {
 
@@ -128,7 +156,7 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
                 @Override
                 public void onFailure(Call<String> call, Throwable t) {
                     showErrorMessage();
-                    Toast.makeText(getActivity(), "An error occured", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "An error occurred", Toast.LENGTH_SHORT).show();
                     Log.d(LOG_TAG, String.valueOf(t));
 
                 }
@@ -176,31 +204,6 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
     }
 
     @Override
-    public void recyclerViewOnClick(int position) {
-        MovieModel movieModel = movieArrayList.get(position);
-        startActivity(new Intent(getActivity(),MovieDetail.class)
-                .putExtra(EXTRA_PARCEABLE,movieModel));
-
-    }
-
-  /*  @Override
-    public void onStart() {
-        super.onStart();
-        if(mSavedBundle!=null) {
-            if (PreferenceUtils.currentSortOrder(getActivity()).equals(currentSortOrder)) {
-                movieArrayList = mSavedBundle.getParcelableArrayList(MY_LIST);
-                movieListAdapter.setMovieList(movieArrayList);
-                showResponse();
-            } else {
-                fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
-            }
-        } else {
-
-        }
-
-    }*/
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -219,10 +222,28 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
+        String currentSortOrder = PreferenceUtils.currentSortOrder(getActivity());
         if (key.equals(getString(R.string.pref_list_key))) {
-            fetchMovieList(PreferenceUtils.currentSortOrder(getActivity()));
+
+            if (currentSortOrder.equals("favourites")) {
+                //TODO: restart Loader Manager
+                showResponse();
+                getActivity().getSupportLoaderManager().initLoader(TASK_LOADER_ID, null, this);
+
+            } else {
+                //getActivity().getSupportLoaderManager().destroyLoader(TASK_LOADER_ID);
+                fetchMovieList(currentSortOrder);
+            }
         }
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        String sortOrder = PreferenceUtils.currentSortOrder(getActivity());
+        if (sortOrder.equals("favourites"))
+            getActivity().getSupportLoaderManager().restartLoader(TASK_LOADER_ID, null, this);
     }
 
     @Override
@@ -230,4 +251,113 @@ public class MovieListActivityFragment extends Fragment implements MovieListAdap
         super.onDestroy();
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
     }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new AsyncTaskLoader<Cursor>(getActivity()) {
+
+            Cursor cursor;
+
+            @Override
+            public Cursor loadInBackground() {
+                try{
+                    return getActivity().getContentResolver().query(
+                                    MovieContract.MovieEntry.MOVIE_URI,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                    );
+
+                } catch (Exception e){
+                    //Toast.makeText(getActivity(),"Exception",Toast.LENGTH_LONG).show();
+                    Log.d("TAG","catch exception");
+                    return null;
+                }
+
+            }
+
+            @Override
+            protected void onStartLoading() {
+                Log.d("LOG","onStartLoading");
+                if (cursor!=null)
+                    deliverResult(cursor);
+                else
+                    forceLoad();
+            }
+
+            @Override
+            public void deliverResult(Cursor data) {
+                super.deliverResult(data);
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        notifyAdapter(data);
+        Log.d("LOG","onLoadFinished");
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        notifyAdapter(null);
+    }
+
+    protected void notifyAdapter(final Cursor data){
+
+        if (data==null)
+            return;
+
+        int title = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_TITLE);
+        int average = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_AVERAGE);
+        int overview = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_OVERVIEW);
+        int id = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+
+        //ArrayList<MovieModel> cursorList = new ArrayList<>();
+        movieArrayList.clear();
+        Log.d("LOG",String.valueOf(data.getCount()));
+
+        for (int i=0; i<data.getCount();i++){
+
+            data.moveToPosition(i);
+            MovieModel model = new MovieModel();
+
+            model.setTitle(data.getString(title));
+            model.setAverage(data.getString(average));
+            model.setOverview(data.getString(overview));
+            model.setId(data.getString(id));
+
+            movieArrayList.add(model);
+        }
+
+        movieListAdapter.setMovieList(movieArrayList);
+
+    }
+
+    @Override
+    public void recyclerViewOnClick(MovieModel movieModel) {
+
+        if (twoPane){
+
+            Toast.makeText(getActivity(), movieModel.getId(), Toast.LENGTH_SHORT).show();
+            MovieDetailFragment movieDetailFragment = new MovieDetailFragment();
+
+            Bundle args = new Bundle();
+            args.putParcelable(BUNDLE_EXTRA, movieModel);
+            movieDetailFragment.setArguments(args);
+
+            getActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.movie_detail_tablet,movieDetailFragment)
+                    .commit();
+
+        } else {
+
+            startActivity(new Intent(getActivity(),MovieDetail.class)
+                    .putExtra(EXTRA_PARCELABLE,movieModel));
+
+        }
+
+    }
+
 }

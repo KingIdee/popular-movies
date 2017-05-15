@@ -10,15 +10,19 @@
     <string-array name="pref_example_list_titles">
         <item>Popular</item>
         <item>Top rated</item>
+        <item>Favourites</item>
     </string-array>
     <string-array name="pref_example_list_values">
         <item>popular</item>
         <item>top_rated</item>
+        <item>favourites</item>
     </string-array>
 
 
     <string name="pref_title_select_sort_order">Select sort order</string>
     <string name="default_value_list">popular</string>
     <string name="pref_list_key">sort_type</string>
+    <string name="title_item_list">Items</string>
+    <string name="title_item_detail">Item Detail</string>
 
 </resources>

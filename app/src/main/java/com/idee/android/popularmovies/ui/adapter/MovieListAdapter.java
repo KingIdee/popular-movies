@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.idee.popularmovies.R;
-import com.idee.android.popularmovies.model.MovieModel;
+import com.idee.android.popularmovies.data.model.MovieModel;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -32,9 +32,10 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
         notifyDataSetChanged();
     }
 
-    public MovieListAdapter(Context mContext,  ItemClickListener mItemClickListener) {
+    public MovieListAdapter(Context mContext,ItemClickListener mItemClickListener) {
         this.mContext = mContext;
         this.mItemClickListener = mItemClickListener;
+
     }
 
     @Override
@@ -47,7 +48,11 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
     public void onBindViewHolder(ViewHolder holder, int position) {
         //http://image.tmdb.org/t/p/w185//nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg
         holder.movieTitle.setText(movieArrayList.get(position).getTitle());
-        Picasso.with(mContext).load("http://image.tmdb.org/t/p/w185/" +movieArrayList.get(position).getPosterPath()).into(holder.posterImage);
+        Picasso.with(mContext)
+                .load("http://image.tmdb.org/t/p/w185/" +movieArrayList.get(position).getPosterPath())
+                .error(R.drawable.ic_info_black_24dp)
+                .placeholder(R.drawable.ic_info_black_24dp)
+                .into(holder.posterImage);
     }
 
     @Override
@@ -55,7 +60,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
         return movieArrayList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         @BindView(R.id.iv_movie_poster_image)
         ImageView posterImage;
@@ -63,7 +68,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
         @BindView(R.id.tv_movie_title)
         TextView movieTitle;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
             ButterKnife.bind(this,itemView);
@@ -71,12 +76,13 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
 
         @Override
         public void onClick(View v) {
-            mItemClickListener.recyclerViewOnClick(getAdapterPosition());
+            MovieModel model = movieArrayList.get(getAdapterPosition());
+            mItemClickListener.recyclerViewOnClick(model);
         }
     }
 
     public interface ItemClickListener{
-        void recyclerViewOnClick(int position);
+        void recyclerViewOnClick(MovieModel movieModel);
     }
 
 }

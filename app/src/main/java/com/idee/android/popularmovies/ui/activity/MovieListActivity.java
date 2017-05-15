@@ -1,26 +1,17 @@
 package com.idee.android.popularmovies.ui.activity;
 
-
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.widget.ImageView;
 
 import com.android.idee.popularmovies.R;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class MovieListActivity extends AppCompatActivity {
 
-
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
-
-    }
+    public static final String EXTRA_PARCELABLE = "extra_parcelable";
+    public static final String BUNDLE_EXTRA = "bundle_fragment_extra";
+    public static boolean twoPane = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +20,15 @@ public class MovieListActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        if (findViewById(R.id.movie_detail_tablet)!=null){
+            twoPane = true;
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.movie_detail_tablet,
+                             new MovieDetailFragment())
+                    .commit();
 
+        } else
+            twoPane = false;
     }
 
     @Override
