@@ -19,20 +19,22 @@ public class MovieProvider extends ContentProvider {
 
     private final static int MOVIE = 100;
     private final static int MOVIE_WITH_ID = 101;
-
+/*
     private final static int TRAILERS = 200;
     private final static int TRAILERS_WITH_ID = 201;
 
     private final static int REVIEWS = 300;
-    private final static int REVIEWS_WITH_ID = 301;
+    private final static int REVIEWS_WITH_ID = 301;*/
 
     private MovieDbHelper dbHelper;
     private static UriMatcher sUriMatcher = buildUriMatcher();
 
     private static UriMatcher buildUriMatcher (){
         UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+
         uriMatcher.addURI(MovieContract.CONTENT_AUTHORITY,MovieContract.MOVIE_PATH,MOVIE);
         uriMatcher.addURI(MovieContract.CONTENT_AUTHORITY,MovieContract.MOVIE_PATH+"/#",MOVIE_WITH_ID);
+
         return uriMatcher;
     }
 
@@ -59,6 +61,7 @@ public class MovieProvider extends ContentProvider {
                 rCursor = db.query(MovieContract.MovieEntry.TABLE_NAME,
                         projection,selection,selectionArgs,null,null,sortOrder);
                 break;
+
 
             case MOVIE_WITH_ID:
 
@@ -125,6 +128,7 @@ public class MovieProvider extends ContentProvider {
 
         int match = sUriMatcher.match(uri);
         int itemsDeleted = 0;
+        String id;
 
         switch (match){
 
@@ -133,7 +137,7 @@ public class MovieProvider extends ContentProvider {
                 break;
 
             case MOVIE_WITH_ID:
-                String id = uri.getPathSegments().get(1);
+                id = uri.getPathSegments().get(1);
                 itemsDeleted = db.delete(MovieContract.MovieEntry.TABLE_NAME,"_id=?",new String[]{id});
                 break;
 

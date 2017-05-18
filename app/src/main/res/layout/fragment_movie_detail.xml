@@ -7,7 +7,12 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.idee.android.popularmovies.ui.activity.MovieDetail">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
     <LinearLayout
+        android:id="@+id/ll_movie_detail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="16dp"
@@ -70,5 +75,23 @@
             android:layout_height="wrap_content" />
 
     </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_below="@+id/ll_movie_detail"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/rv_trailers_list"
+        />
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/rv_trailers_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/rv_reviews_list"
+        />
+
+    </RelativeLayout>
 
 </android.support.v4.widget.NestedScrollView>

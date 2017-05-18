@@ -5,7 +5,6 @@ import android.content.Context;
 import com.android.idee.popularmovies.BuildConfig;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
@@ -33,25 +32,69 @@ public class NetworkUtils {
 
     public interface MovieApiClient {
         @GET("/3/movie/{sort_order}?api_key="+ BuildConfig.MOVIEDB_API_KEY)
-        Call<String> movieModelList(
-                @Path("sort_order") String sortOrder
-        );
+        Call<String> movieModelList(@Path("sort_order") String sortOrder);
     }
 
-    public static MovieApiClient retrofitInstance() {
+    public interface TrailersApiClient {
+        //api.themoviedb.org/3/movie/118340/videos?api_key=78672b9eec5df84f1a4f9ae81fa31d59
+        @GET("/3/movie/{movie_id}/videos?api_key="+ BuildConfig.MOVIEDB_API_KEY)
+        Call<String> trailersList(@Path("movie_id") String movieId);
+    }
+
+    public interface ReviewsApiClient {
+        //api.themoviedb.org/3/movie/118340/reviews?api_key=78672b9eec5df84f1a4f9ae81fa31d59
+        @GET("/3/movie/{movie_id}/reviews?api_key="+ BuildConfig.MOVIEDB_API_KEY)
+        Call<String> reviewsList(@Path("movie_id") String movieId);
+    }
+
+    public static MovieApiClient movieApiInstance () {
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
         Retrofit.Builder builder = new Retrofit.Builder()
                 .baseUrl(MOVIE_BASE_URL)
                 .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create());;
+                .addConverterFactory(GsonConverterFactory.create());
 
         Retrofit retrofit = builder
                 .client(httpClient.build())
                 .build();
 
         return retrofit.create(MovieApiClient.class);
+
+    }
+
+    public static TrailersApiClient trailersApiInstance () {
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+
+        Retrofit.Builder builder = new Retrofit.Builder()
+                .baseUrl(MOVIE_BASE_URL)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create());
+
+        Retrofit retrofit = builder
+                .client(httpClient.build())
+                .build();
+
+        return retrofit.create(TrailersApiClient.class);
+
+    }
+
+    public static ReviewsApiClient reviewsApiInstance () {
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+
+        Retrofit.Builder builder = new Retrofit.Builder()
+                .baseUrl(MOVIE_BASE_URL)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create());
+
+        Retrofit retrofit = builder
+                .client(httpClient.build())
+                .build();
+
+        return retrofit.create(ReviewsApiClient.class);
 
     }
 

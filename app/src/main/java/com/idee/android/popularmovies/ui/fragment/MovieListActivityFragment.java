@@ -143,7 +143,7 @@ public class MovieListActivityFragment extends Fragment
 
         if (NetworkUtils.isOnline(getActivity())) {
 
-            Call<String> call = NetworkUtils.retrofitInstance().movieModelList(sortOrder);
+            Call<String> call = NetworkUtils.movieApiInstance().movieModelList(sortOrder);
             call.enqueue(new Callback<String>() {
                 @Override
                 public void onResponse(Call<String> call, Response<String> response) {
@@ -231,7 +231,7 @@ public class MovieListActivityFragment extends Fragment
                 getActivity().getSupportLoaderManager().initLoader(TASK_LOADER_ID, null, this);
 
             } else {
-                //getActivity().getSupportLoaderManager().destroyLoader(TASK_LOADER_ID);
+                getActivity().getSupportLoaderManager().destroyLoader(TASK_LOADER_ID);
                 fetchMovieList(currentSortOrder);
             }
         }

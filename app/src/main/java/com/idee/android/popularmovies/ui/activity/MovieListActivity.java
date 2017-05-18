@@ -1,6 +1,7 @@
 package com.idee.android.popularmovies.ui.activity;
 
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -12,6 +13,13 @@ public class MovieListActivity extends AppCompatActivity {
     public static final String EXTRA_PARCELABLE = "extra_parcelable";
     public static final String BUNDLE_EXTRA = "bundle_fragment_extra";
     public static boolean twoPane = false;
+    MovieDetailFragment movieDetailFragment;
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        getSupportFragmentManager().putFragment(outState,"fragment", movieDetailFragment);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,9 +30,15 @@ public class MovieListActivity extends AppCompatActivity {
 
         if (findViewById(R.id.movie_detail_tablet)!=null){
             twoPane = true;
+
+            if (savedInstanceState==null)
+                movieDetailFragment = new MovieDetailFragment();
+            else
+                movieDetailFragment = (MovieDetailFragment) getSupportFragmentManager().getFragment(savedInstanceState,"fragment");
+
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.movie_detail_tablet,
-                             new MovieDetailFragment())
+                            movieDetailFragment)
                     .commit();
 
         } else

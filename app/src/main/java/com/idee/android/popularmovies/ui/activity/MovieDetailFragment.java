@@ -9,23 +9,38 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.idee.popularmovies.R;
 import com.idee.android.popularmovies.data.model.MovieModel;
+import com.idee.android.popularmovies.data.model.ReviewModel;
+import com.idee.android.popularmovies.data.model.TrailerModel;
 import com.idee.android.popularmovies.data.provider.MovieContract;
+import com.idee.android.popularmovies.ui.adapter.ReviewListAdapter;
+import com.idee.android.popularmovies.ui.adapter.TrailerListAdapter;
+import com.idee.android.popularmovies.utils.NetworkUtils;
 import com.idee.android.popularmovies.utils.PreferenceUtils;
 import com.squareup.picasso.Picasso;
 
-import butterknife.BindView;
-import butterknife.OnClick;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static com.idee.android.popularmovies.ui.activity.MovieListActivity.BUNDLE_EXTRA;
 
@@ -33,11 +48,16 @@ import static com.idee.android.popularmovies.ui.activity.MovieListActivity.BUNDL
  * A placeholder fragment containing a simple view.
  */
 public class MovieDetailFragment extends Fragment
-        implements LoaderManager.LoaderCallbacks<Cursor>  {
+        implements LoaderManager.LoaderCallbacks<Cursor>,TrailerListAdapter.ItemClickListener {
 
     private static final int TASK_LOADER_ID = 1998;
     MovieModel movieModel;
+    ImageButton favouriteButton;
     boolean isFavourite = false;
+    private ArrayList<TrailerModel> trailerArrayList = new ArrayList<>();
+    private ArrayList<ReviewModel> reviewArrayList = new ArrayList<>();
+    private TrailerListAdapter adapter;
+    private ReviewListAdapter reviewsAdapter;
 
     public MovieDetailFragment() {}
 
@@ -54,6 +74,18 @@ public class MovieDetailFragment extends Fragment
         releaseDate = (TextView) view.findViewById(R.id.tv_release_date);
         overview = (TextView) view.findViewById(R.id.tv_overview);
         voteAverage = (TextView) view.findViewById(R.id.tv_vote_average);
+
+        adapter = new TrailerListAdapter(getActivity(),this);
+        reviewsAdapter = new ReviewListAdapter(getActivity());
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        RecyclerView recyclerViewTrailers = (RecyclerView) view.findViewById(R.id.rv_trailers_list);
+        recyclerViewTrailers.setLayoutManager(layoutManager);
+        recyclerViewTrailers.setAdapter(adapter);
+
+        RecyclerView recyclerViewReviews = (RecyclerView) view.findViewById(R.id.rv_reviews_list);
+        recyclerViewReviews.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerViewReviews.setAdapter(reviewsAdapter);
 
         Bundle bundle = getArguments();
 
@@ -72,6 +104,9 @@ public class MovieDetailFragment extends Fragment
             //Picasso.with(getActivity()).
               //      load("http://image.tmdb.org/t/p/w185/" +movieModel.getBackdropPath()).into(imageBackground);
 
+            makeTrailersRequest();
+            makeReviewsRequest();
+
             getActivity().getSupportLoaderManager().initLoader(TASK_LOADER_ID, null, this);
 
         }
@@ -89,7 +124,124 @@ public class MovieDetailFragment extends Fragment
 
     }
 
-    ImageButton favouriteButton;
+    private void makeReviewsRequest() {
+
+        if (NetworkUtils.isOnline(getActivity())) {
+
+            //Call<String> call =
+
+            NetworkUtils.reviewsApiInstance()
+                    .reviewsList(movieModel.getId())
+                    .enqueue(new Callback<String>() {
+                @Override
+                public void onResponse(Call<String> call, Response<String> response) {
+                    Log.d("TAG", String.valueOf(response.body()));
+
+                    JSONObject jsonObject;
+                    JSONArray jsonArray;
+
+                    if (response.isSuccessful()) {
+                        String body = response.body();
+
+                        try {
+                            jsonObject = new JSONObject(body);
+                            jsonArray = jsonObject.getJSONArray("results");
+
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject object = jsonArray.getJSONObject(i);
+
+                                ReviewModel trailerModel = new ReviewModel();
+                                trailerModel.setAuthor(object.getString("author"));
+                                trailerModel.setContent(object.getString("content"));
+
+                                reviewArrayList.add(trailerModel);
+                            }
+
+                            reviewsAdapter.setReviewList(reviewArrayList);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+
+
+                }
+                @Override
+                public void onFailure(Call<String> call, Throwable t) {
+
+                    Toast.makeText(getActivity(), "An error occurred", Toast.LENGTH_SHORT).show();
+                    Log.d("TAG", String.valueOf(t));
+
+                }
+            });
+
+        } else {
+
+            Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+
+        }
+
+    }
+
+    private void makeTrailersRequest() {
+
+        if (NetworkUtils.isOnline(getActivity())) {
+
+            Call<String> call = NetworkUtils.trailersApiInstance().trailersList(movieModel.getId());
+
+            call.enqueue(new Callback<String>() {
+                @Override
+                public void onResponse(Call<String> call, Response<String> response) {
+                    Log.d("TAG", String.valueOf(response.body()));
+
+                    JSONObject jsonObject;
+                    JSONArray jsonArray;
+
+                    if (response.isSuccessful()) {
+                        String body = response.body();
+
+                        try {
+                            jsonObject = new JSONObject(body);
+                            jsonArray = jsonObject.getJSONArray("results");
+
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject object = jsonArray.getJSONObject(i);
+
+                                TrailerModel trailerModel = new TrailerModel();
+                                trailerModel.setKey(object.getString("key"));
+                                trailerModel.setName(object.getString("name"));
+
+                                trailerArrayList.add(trailerModel);
+                            }
+
+                            adapter.setTrailerList(trailerArrayList);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+
+
+                }
+                @Override
+                public void onFailure(Call<String> call, Throwable t) {
+
+                    Toast.makeText(getActivity(), "An error occurred", Toast.LENGTH_SHORT).show();
+                    Log.d("TAG", String.valueOf(t));
+
+                }
+            });
+
+        } else {
+
+            Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+
+        }
+
+    }
+
     public void handleFavButtonClick(){
 
         Toast.makeText(getActivity(), "buttonClicked", Toast.LENGTH_SHORT).show();
@@ -123,13 +275,22 @@ public class MovieDetailFragment extends Fragment
 
     private void addToFavourites(){
         Log.d("TAG","addToFavourites");
+
+        /**
+         * Insert into the movie table
+         */
         ContentValues values = new ContentValues();
         values.put(MovieContract.MovieEntry.COLUMN_MOVIE_TITLE,movieModel.getTitle());
         values.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID,movieModel.getId());
+        values.put(MovieContract.MovieEntry.COLUMN_IMAGE_POSTER_PATH,movieModel.getPosterPath());
         values.put(MovieContract.MovieEntry.COLUMN_MOVIE_OVERVIEW,movieModel.getOverview());
         values.put(MovieContract.MovieEntry.COLUMN_MOVIE_AVERAGE,movieModel.getAverage());
 
         Uri uri = getActivity().getContentResolver().insert(MovieContract.MovieEntry.MOVIE_URI,values);
+
+        /**
+         * Insert into the trailers table
+         */
 
         if (uri!=null){
             Toast.makeText(getActivity(), uri.toString(), Toast.LENGTH_SHORT).show();
@@ -143,8 +304,6 @@ public class MovieDetailFragment extends Fragment
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
-        final Cursor data = null;
 
         AsyncTaskLoader<Cursor> asyncTaskLoader;
         asyncTaskLoader =  new AsyncTaskLoader<Cursor>(getActivity()) {
@@ -202,13 +361,40 @@ public class MovieDetailFragment extends Fragment
         }
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+    }
+
     private void adjustFavButton(boolean b) {
 
-       /* if (b){
+        if (b){
+            getActivity();
             favouriteButton.setBackgroundResource(R.drawable.favourite);
         } else {
             favouriteButton.setBackgroundResource(R.drawable.unfavourite);
-        }*/
+        }
 
     }
 
@@ -217,4 +403,8 @@ public class MovieDetailFragment extends Fragment
 
     }
 
+    @Override
+    public void trailerOnClick(TrailerModel movieModel) {
+
+    }
 }
