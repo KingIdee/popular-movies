@@ -23,7 +23,7 @@ public class MovieDetail extends AppCompatActivity {
 
         Toast.makeText(this, "MovieDetail", Toast.LENGTH_SHORT).show();
 
-        if (savedInstanceState==null) {
+        //if (savedInstanceState==null) {
 
             if (getIntent().getExtras() != null) {
                 MovieModel model = getIntent()
@@ -40,7 +40,6 @@ public class MovieDetail extends AppCompatActivity {
                         .add(R.id.fl_movie_detail, movieDetailFragment)
                         .commit();
             }
-        }
 
     }
 

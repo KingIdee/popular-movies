@@ -50,8 +50,8 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
         holder.movieTitle.setText(movieArrayList.get(position).getTitle());
         Picasso.with(mContext)
                 .load("http://image.tmdb.org/t/p/w185/" +movieArrayList.get(position).getPosterPath())
-                .error(R.drawable.ic_info_black_24dp)
-                .placeholder(R.drawable.ic_info_black_24dp)
+                .error(R.drawable.no_image)
+                //.placeholder(R.drawable.ic_info_black_24dp)
                 .into(holder.posterImage);
     }
 

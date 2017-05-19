@@ -2,6 +2,7 @@ package com.idee.android.popularmovies.ui.activity;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
@@ -75,6 +76,15 @@ public class MovieDetailFragment extends Fragment
         overview = (TextView) view.findViewById(R.id.tv_overview);
         voteAverage = (TextView) view.findViewById(R.id.tv_vote_average);
 
+        favouriteButton = (ImageButton) view.findViewById(R.id.ib_favourite);
+        favouriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "Clicked", Toast.LENGTH_SHORT).show();
+                handleFavButtonClick();
+            }
+        });
+
         adapter = new TrailerListAdapter(getActivity(),this);
         reviewsAdapter = new ReviewListAdapter(getActivity());
 
@@ -110,15 +120,6 @@ public class MovieDetailFragment extends Fragment
             getActivity().getSupportLoaderManager().initLoader(TASK_LOADER_ID, null, this);
 
         }
-
-        favouriteButton = (ImageButton) view.findViewById(R.id.ib_favourite);
-        favouriteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "Clicked", Toast.LENGTH_SHORT).show();
-                handleFavButtonClick();
-            }
-        });
 
         return view;
 
@@ -165,12 +166,11 @@ public class MovieDetailFragment extends Fragment
 
                     }
 
-
                 }
                 @Override
                 public void onFailure(Call<String> call, Throwable t) {
 
-                    Toast.makeText(getActivity(), "An error occurred", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getActivity(), "An error occurred", Toast.LENGTH_SHORT).show();
                     Log.d("TAG", String.valueOf(t));
 
                 }
@@ -228,8 +228,8 @@ public class MovieDetailFragment extends Fragment
                 @Override
                 public void onFailure(Call<String> call, Throwable t) {
 
-                    Toast.makeText(getActivity(), "An error occurred", Toast.LENGTH_SHORT).show();
-                    Log.d("TAG", String.valueOf(t));
+                    //Toast.makeText(getActivity(), "An error occurred", Toast.LENGTH_SHORT).show();
+                    //Log.d("TAG", String.valueOf(t));
 
                 }
             });
@@ -248,13 +248,13 @@ public class MovieDetailFragment extends Fragment
         if (isFavourite){
             Log.d("TAG","about to remove from favourites");
             //It was already in favourites
-            adjustFavButton(true);
+            adjustFavButton(false);
             removeFromFavourites();
             //TODO: remove from content provider
         } else {
             Log.d("TAG","about to add to favourites");
             // was never among the favourites
-            adjustFavButton(false);
+            adjustFavButton(true);
             addToFavourites();
         }
 
@@ -350,7 +350,7 @@ public class MovieDetailFragment extends Fragment
                 isFavourite = true;
                 adjustFavButton(true);
                 Toast.makeText(getActivity(), loader.dataToString(data), Toast.LENGTH_SHORT).show();
-                Log.d("TAG", loader.dataToString(data));
+                Log.d("TAG", String.valueOf(data.getCount()));
             } else {
                 isFavourite = false;
                 adjustFavButton(false);
@@ -361,36 +361,9 @@ public class MovieDetailFragment extends Fragment
         }
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
-
     private void adjustFavButton(boolean b) {
 
         if (b){
-            getActivity();
             favouriteButton.setBackgroundResource(R.drawable.favourite);
         } else {
             favouriteButton.setBackgroundResource(R.drawable.unfavourite);
@@ -405,6 +378,11 @@ public class MovieDetailFragment extends Fragment
 
     @Override
     public void trailerOnClick(TrailerModel movieModel) {
+
+        String url = "https://www.youtube.com/watch?v=" + movieModel.getKey();
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
 
     }
 }

@@ -313,6 +313,7 @@ public class MovieListActivityFragment extends Fragment
         int average = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_AVERAGE);
         int overview = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_OVERVIEW);
         int id = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+        int posterPath = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_IMAGE_POSTER_PATH);
 
         //ArrayList<MovieModel> cursorList = new ArrayList<>();
         movieArrayList.clear();
@@ -327,6 +328,7 @@ public class MovieListActivityFragment extends Fragment
             model.setAverage(data.getString(average));
             model.setOverview(data.getString(overview));
             model.setId(data.getString(id));
+            model.setPosterPath(data.getString(posterPath));
 
             movieArrayList.add(model);
         }
